@@ -7,10 +7,12 @@ import java.util.stream.Collectors;
 
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 
+@Path("leak")
 public class LeakyResource {
     static final List<Integer> leak = new ArrayList<>();
     
