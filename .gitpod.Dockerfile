@@ -10,4 +10,5 @@ RUN bash -c "apt-get install k6"
 
 USER gitpod
 RUN bash -c "brew install hurl"
+RUN bash -c "sdk install quarkus"
 

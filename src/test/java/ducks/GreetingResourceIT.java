@@ -1,4 +1,4 @@
-package caravanacloud;
+package ducks;
 
 import io.quarkus.test.junit.QuarkusIntegrationTest;
 
