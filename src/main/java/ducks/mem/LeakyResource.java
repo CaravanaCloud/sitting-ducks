@@ -1,11 +1,9 @@
-package ducks.cpu;
+package ducks.mem;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.LongStream;
 
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -13,16 +11,17 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 
-public class SortResource {
+public class LeakyResource {
+    static final List<Integer> leak = new ArrayList<>();
+    
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public String getSorted(@QueryParam("x") @DefaultValue("1") int x){        
-        var ys = new ArrayList<Integer>(x);
         for (var i = 0; i < x; i++) {
             var y = ThreadLocalRandom.current().nextInt();
-            ys.add(y);
+            leak.add(y);
         }
-        var result = ys.stream()
+        var result = leak.stream()
             .sorted()
             .map(Object::toString)
             .collect(Collectors.joining(", "));
