@@ -1,0 +1,1 @@
+GET {{proto}}://{{host}}:{{port}}/
