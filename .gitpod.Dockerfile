@@ -10,5 +10,9 @@ RUN bash -c "apt-get install k6"
 
 USER gitpod
 RUN bash -c "brew install hurl"
-RUN bash -c "sdk install quarkus"
+ARG JAVA_SDK="21-amzn"
+RUN bash -c ". /home/gitpod/.sdkman/bin/sdkman-init.sh \
+    && sdk install java $JAVA_SDK \
+    && sdk default java $JAVA_SDK \
+    && sdk install quarkus"
 
