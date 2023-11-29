@@ -1,0 +1,5 @@
+export HURL_proto="http"
+export HURL_host="localhost"
+export HURL_port="3030"
+export QUARKUS_CONTAINER_IMAGE_USERNAME="YOURCREDENTIAL"
+export QUARKUS_CONTAINER_IMAGE_PASSWORD="YOURCREDENTIAL"

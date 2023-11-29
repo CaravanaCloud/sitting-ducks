@@ -9,10 +9,12 @@ import java.util.stream.LongStream;
 
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 
+@Path("/sort")
 public class SortResource {
     @GET
     @Produces(MediaType.TEXT_PLAIN)
