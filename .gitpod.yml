@@ -2,9 +2,12 @@ image:
   file: .gitpod.Dockerfile
 
 tasks:
-  - name: Hello
+  - name: Build and Run
     init: quarkus build
-    command: echo "Welcome! 🦆"
+    command: quarkus dev
+
+  - name: Shoot
+    command: gp preview --external https://localhost:3030/
 
 ports:
   - port: 3030
