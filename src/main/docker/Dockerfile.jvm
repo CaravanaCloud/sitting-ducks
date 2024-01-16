@@ -1,87 +1,64 @@
 ####
 # docker build -f src/main/docker/Dockerfile.jvm --no-cache --progress=plain -t caravanacloud/sitting-ducks:latest .
 # docker run -i --rm -p 3030:3030 caravanacloud/sitting-ducks:latest
+# docker push caravanacloud/sitting-ducks:latest
+# docker push caravanacloud/sitting-ducks:1.0.0
 ###
 
 ### BUILD STAGE ###
-FROM fedora as build
+ARG  JAVA_UBI="caravanacloud/ubi-java:J21F39"
+FROM $JAVA_UBI as build
 
-# Root level
-USER root
-ENV LANGUAGE='en_US:en'
-RUN bash -c 'sudo dnf -y install curl wget unzip zip'
-
-# Create user
 ARG USERNAME=container-user
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -d "/home/$USERNAME"
-
 # User level
 USER $USERNAME
 
-ARG JAVA_SDK="21.0.1-amzn"
-RUN curl -s 'https://get.sdkman.io' | bash
-RUN source "/home/$USERNAME/.sdkman/bin/sdkman-init.sh" \
-    && sdk install java $JAVA_SDK \
-    && sdk default java $JAVA_SDK \
-    && sdk install maven
-
 RUN mkdir -p "/home/$USERNAME/quarkus-app"
 WORKDIR "/home/$USERNAME/quarkus-app"
-COPY . .
+COPY --chown=$USERNAME . .
 
-RUN find .
+ENV PATH="${PATH}:/home/$USERNAME/.sdkman/candidates/maven/current/bin/"
+ARG MVN_XOPTS="-fn -B -ntp -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
+RUN mvn $MVN_XOPTS install
 
-RUN source "/home/container-user/.sdkman/bin/sdkman-init.sh" \
-    && mvn -fn verify
-
+RUN echo "====="
 RUN pwd
+RUN ls -liah ./target/quarkus-app/
 RUN find .
 
 
 ### RUNTIME STAGE ###
-FROM fedora
-
-# Root level
-USER root
-ENV LANGUAGE='en_US:en'
-RUN bash -c 'sudo dnf -y install curl wget unzip zip'
+FROM $JAVA_UBI
 
 # Create user
 ARG USERNAME=container-user
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -d "/home/$USERNAME"
-
 # User level
 USER $USERNAME
 
-ARG JAVA_SDK="21.0.1-amzn"
-RUN curl -s 'https://get.sdkman.io' | bash
-RUN source "/home/container-user/.sdkman/bin/sdkman-init.sh" \
-    && sdk install java $JAVA_SDK \
-    && sdk default java $JAVA_SDK
 
 ARG CP_FROM="/home/container-user/quarkus-app/target/quarkus-app"
-ARG CP_TO="/opt/quarkus-app"
+ARG CP_TO="/home/container-user/quarkus-app/target/quarkus-app"
 
 RUN mkdir -p "$CP_TO"
 
-# COPY --from=build --chown=$USERNAME $CP_FROM/app $CP_TO/app
+COPY --from=build --chown=$USERNAME $CP_FROM $CP_TO
 # COPY --from=build --chown=$USERNAME $CP_FROM/lib $CP_TO/lib
 # COPY --from=build --chown=$USERNAME $CP_FROM/quarkus $CP_TO/quarkus
 # COPY --from=build --chown=$USERNAME $CP_FROM/quarkus-app-dependencies.txt $CP_TO/quarkus-app-dependencies.txt
 # COPY --from=build --chown=$USERNAME $CP_FROM/quarkus-run.jar $CP_TO/quarkus-run.jar
 
 RUN find "$CP_TO"
+RUN ls -liah "$CP_TO/quarkus-run.jar"
 
 EXPOSE 3030
 
 ENV USERNAME=$USERNAME
-ENV JAVA_EXEC=/home/$USERNAME/.sdkman/candidates/java/current/bin/java
-ENTRYPOINT $JAVA_EXEC -jar /opt/quarkus-app/quarkus-run.jar
+# ENV JAVA_EXEC=/home/$USERNAME/.sdkman/candidates/java/current/bin/java
+ENV JAVA_EXEC=java
+ENTRYPOINT $JAVA_EXEC -jar /home/container-user/quarkus-app/target/quarkus-app/quarkus-run.jar
