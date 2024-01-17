@@ -1,6 +1,7 @@
 # docker run -it --rm -p 0.0.0.0:3030:3030 caravanacloud/sitting-ducks:1.0.0 
-# kubectl apply -f sitting-ducks.k8s.yaml
-# kubectl get all
+#? oc adm policy add-scc-to-group privileged system:authenticated
+# oc apply -f sitting-ducks.k8s.yaml
+# oc get all
 # oc get route -o json | jq -r  '.items[0].status.ingress[0].host'
 
 apiVersion: apps/v1
@@ -22,8 +23,15 @@ spec:
             containers:
             - name: sitting-ducks
               image: caravanacloud/sitting-ducks:1.0.0
+              
               securityContext:
                 runAsUser: 1000
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+                seccompProfile:
+                  type: "RuntimeDefault"
               ports:
               - containerPort: 3030
 ---

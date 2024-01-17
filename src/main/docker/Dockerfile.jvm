@@ -6,12 +6,9 @@
 ###
 
 ### BUILD STAGE ###
-ARG  JAVA_UBI="caravanacloud/ubi-java:J21F39"
-FROM $JAVA_UBI as build
+FROM caravanacloud/ubi-java:21-build as build
 
 ARG USERNAME=container-user
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
 
 # User level
 USER $USERNAME
@@ -24,41 +21,21 @@ ENV PATH="${PATH}:/home/$USERNAME/.sdkman/candidates/maven/current/bin/"
 ARG MVN_XOPTS="-fn -B -ntp -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
 RUN mvn $MVN_XOPTS install
 
-RUN echo "====="
-RUN pwd
-RUN ls -liah ./target/quarkus-app/
-RUN find .
-
 
 ### RUNTIME STAGE ###
-FROM $JAVA_UBI
+FROM caravanacloud/ubi-java:21
 
 # Create user
 ARG USERNAME=container-user
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
-
-# User level
 USER $USERNAME
 
-
 ARG CP_FROM="/home/container-user/quarkus-app/target/quarkus-app"
-ARG CP_TO="/home/container-user/quarkus-app/target/quarkus-app"
-
+ARG   CP_TO=$CP_FROM
 RUN mkdir -p "$CP_TO"
 
 COPY --from=build --chown=$USERNAME $CP_FROM $CP_TO
-# COPY --from=build --chown=$USERNAME $CP_FROM/lib $CP_TO/lib
-# COPY --from=build --chown=$USERNAME $CP_FROM/quarkus $CP_TO/quarkus
-# COPY --from=build --chown=$USERNAME $CP_FROM/quarkus-app-dependencies.txt $CP_TO/quarkus-app-dependencies.txt
-# COPY --from=build --chown=$USERNAME $CP_FROM/quarkus-run.jar $CP_TO/quarkus-run.jar
 
-RUN find "$CP_TO"
 RUN ls -liah "$CP_TO/quarkus-run.jar"
 
 EXPOSE 3030
-
-ENV USERNAME=$USERNAME
-# ENV JAVA_EXEC=/home/$USERNAME/.sdkman/candidates/java/current/bin/java
-ENV JAVA_EXEC=java
-ENTRYPOINT $JAVA_EXEC -jar /home/container-user/quarkus-app/target/quarkus-app/quarkus-run.jar
+ENTRYPOINT java -jar /home/container-user/quarkus-app/target/quarkus-app/quarkus-run.jar
